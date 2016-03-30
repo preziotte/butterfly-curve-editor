@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+/* /////////////////// */
+/* RANGE SLIDER -- http://codepen.io/aronwoost/pen/nlyrf */
+/* /////////////////////////////////////////////////////////////////////////////////////////////// */
+
+* {
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}
+
+.slider {
+  width: 150px;
+  margin: 10px;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 3px;
+  margin: 0;
+  border: none;
+  padding: 1px 4px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, .3);
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  -webkit-box-shadow: inset 0 1px 0 0 #0d0e0f, inset 0 -1px 0 0 #3a3d42;
+          box-shadow: inset 0 1px 0 0 #0d0e0f, inset 0 -1px 0 0 #3a3d42;
+  outline: none; /* no focus outline */
+}
+
+input[type="range"]::-moz-range-track {
+  border: inherit;
+  background: transparent;
+}
+
+input[type="range"]::-ms-track {
+  border: inherit;
+  color: transparent; /* don't drawn vertical reference line */
+  background: transparent;
+}
+
+input[type="range"]::-ms-fill-lower,
+input[type="range"]::-ms-fill-upper {
+  background: transparent;
+}
+
+input[type="range"]::-ms-tooltip {
+  display: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  -webkit-box-shadow: inset 0 1px 0 0 black, inset 0 -1px 0 0 black;
+  box-shadow: inset 0 1px 0 0 black, inset 0 -1px 0 0 black;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 12px;
+  background-color: rgba(232, 74, 93, 1);
+  cursor: ew-resize ;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 12px;
+  background-color: #E84A5F;
+  cursor: ew-resize ;
+}
+
+input[type="range"]::-ms-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 12px;
+  border: 0;
+  background-image: linear-gradient(to bottom, #529de1 0, #245e8f 100%); /* W3C */
+}
+
+
+body {
+    background-color: #2A363B;
+}
+
+.menu {
+  position: fixed;
+  margin: 10px;
+  bottom: 10px;
+  left: 10px;
+}
+
+svg {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: -1;
+}
+
+svg path {
+  fill: none;
+  stroke: #EEE6AB;
+  stroke-width: 1px;
+  stroke-linecap: rounded;
+}
+
+.frame {
+  fill: none;
+  stroke: #000;
+}
+
+.axis text {
+  font: 10px sans-serif;
+  fill: white;
+}
+
+.axis line,
+.axis circle {
+  fill: none;
+  stroke: #EEE6AB;
+  stroke-dasharray: 1,4;
+}
+
+.axis {
+  opacity: 0;
+  -webkit-transition: opacity .5s linear;
+     -moz-transition: opacity .5s linear;
+       -o-transition: opacity .5s linear;
+          transition: opacity .5s linear;
+
+}
+svg:hover .axis {
+	opacity: 0.5;
+}
+
+.axis :last-of-type circle {
+  stroke: #EEE6AB;
+  stroke-dasharray: none;
+}
+
+.line {
+  fill: none;
+  stroke: #E84A5F;
+  stroke-width: 1.5px;
+  stroke-dasharray: 60 10 10 60;
+//  stroke-dasharray: 10 40 10 90;
+  stroke-dashoffset: 0;
+  -webkit-animation: dash 1s ease-in-out infinite, throb 1s ease infinite;
+     -moz-animation: dash 1s ease infinite, throb 1s ease infinite;
+          animation: dash 1s ease infinite, throb 1s ease infinite;
+}
+
+@keyframes dash {
+  100% {
+    stroke-dashoffset: 140;
+  }
+}
+
+@-webkit-keyframes dash {
+  100% {
+    stroke-dashoffset: 140;
+  }
+}
+
+@keyframes throb {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@-webkit-keyframes throb {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+</style>
+<body>
+
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+<script>
+$(document).ready(function(){
+//[2,4,2,24,5,20]
+Eq = [2,4,2,24,5,20]; //[1, 2, 6, 5, 10, 13]  <-- dude
+// [2, -4, -6, -7, 1, 17]
+//[2, 4, 1, 24, 1, 20] <-- my butterfly [2, 4, 1, 9, 3, 20]
+//[10, 5, 2, 9, 3, 20]
+//[0, -8, 7, 24, 5, 20] <-- circle enemy
+//[0, 4, 7, 5, 6, 18] // vary stroke dasharray here
+// circle animation --> start 
+// [0, 6, 9, 5, 6, 18] holy crap.
+//Eq = [-1, 0, 9, 24, 1, 17]; // other circle
+//Eq = [0, 4, 0, 24, 5, 20] // vary 3rd?
+// different Eq values = different emotions.  Each equation is a character.  Tween emotion transitions like in the rose curve.
+$('#slider1').on('input change', function() { Eq[0] = +this.value; update(); }); 
+$('#slider2').on('input change', function() { Eq[1] = +this.value; update(); });  // # of wings
+$('#slider3').on('input change', function() { Eq[2] = +this.value; update(); }); 
+$('#slider4').on('input change', function() { Eq[3] = +this.value; update(); }); 
+$('#slider5').on('input change', function() { Eq[4] = +this.value; update(); }); 
+$('#slider6').on('input change', function() { Eq[5] = +this.value; update(); }); 
+
+// http://bl.ocks.org/mbostock/4583749
+// https://en.wikipedia.org/wiki/Butterfly_curve_(transcendental)
+// http://calculus-geometry.hubpages.com/hub/Butterfly-Curves-in-Polar-Coordinates-on-a-Graphing-Calculator
+
+var data2 = d3.range(0, 12 * Math.PI, .01).map(function(t) {
+	var r = (7 - Math.sin(t) + 2*Math.sin(3*t) + 2*Math.sin(5*t) - Math.sin(7*t) + 0.4*Math.sin(9*t) - 0.4*Math.sin(25*t) + 3*Math.cos(2*t) - 2*Math.cos(4*t) - 0.2*Math.cos(26*t));
+  return [t, r];
+});
+
+var data = d3.range(0, 20 * Math.PI, .01).map(function(t) {
+	var r = Math.exp(Math.sin(t))-Eq[0]*Math.cos(Eq[1]*t)+Math.pow(Math.sin((Eq[2]*t-Math.PI)/Eq[3]),Eq[4]);
+  return [t, r*3];
+});
+
+
+var width = window.innerWidth,
+    height = window.innerHeight-20,
+    radius = Math.min(width, height) / 2 - 30;
+
+var r = d3.scale.linear()
+    .domain([0, 15])
+    .range([0, radius]);
+
+var line = d3.svg.line.radial()
+    .radius(function(d) { return r(d[1]); })
+    .angle(function(d) { return -d[0] + Math.PI / 2; });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  .append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+var gr = svg.append("g")
+    .attr("class", "r axis")
+  .selectAll("g")
+    .data(r.ticks(5).slice(1))
+  .enter().append("g");
+
+gr.append("circle")
+    .attr("r", r);
+
+// gr.append("text")
+//     .attr("y", function(d) { return -r(d) - 4; })
+//     .attr("transform", "rotate(15)")
+//     .style("text-anchor", "middle")
+//     .text(function(d) { return d; });
+
+var ga = svg.append("g")
+    .attr("class", "a axis")
+  .selectAll("g")
+    .data(d3.range(0, 360, 30))
+  .enter().append("g")
+    .attr("transform", function(d) { return "rotate(" + -d + ")"; });
+
+ga.append("line")
+    .attr("x2", radius);
+
+// ga.append("text")
+//     .attr("x", radius + 6)
+//     .attr("dy", ".35em")
+//     .style("text-anchor", function(d) { return d < 270 && d > 90 ? "end" : null; })
+//     .attr("transform", function(d) { return d < 270 && d > 90 ? "rotate(180 " + (radius + 6) + ",0)" : null; })
+//     .text(function(d) { return d + "°"; });
+
+console.log(data);
+svg.append("path")
+    .datum(data)
+    .attr("class", "line")
+    .attr("d", line);
+
+function update() {
+  console.log('update fired');
+
+var data = d3.range(0, Eq[5] * Math.PI, .01).map(function(t) {
+  var r = Math.exp(Math.sin(t))-Eq[0]*Math.cos(Eq[1]*t)+Math.pow(Math.sin((Eq[2]*t-Math.PI)/Eq[3]),Eq[4]);
+  return [t, r*3];
+});
+  d3.selectAll(".line")
+      .datum(data)
+    .transition()
+      .duration(250)
+      .attr("d", line);
+}
+});
+</script>
+
+<body>
+  <div class='menu'>
+    <div class="slider">
+      <input min="-10" max="10" value="1" id='slider1' type="range">
+    </div>
+    <div class="slider">
+      <input min="-8" max="8" value="1" id='slider2' type="range">
+    </div>
+    <div class="slider">
+      <input min="-10" max="10" value="1" id='slider3' type="range">
+    </div>
+    <div class="slider">
+      <input min="-10" max="10" value="1" id='slider4' type="range">
+    </div>
+    <div class="slider">
+      <input min="1" max="8" value="5" id='slider5' type="range">
+    </div>
+    <div class="slider">
+      <input min="0" max="30" value="15" id='slider6' type="range">
+    </div>
+  </div>
+</body>
+
+</html>
